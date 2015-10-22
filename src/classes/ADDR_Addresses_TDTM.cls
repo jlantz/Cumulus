@@ -33,6 +33,7 @@
 * @group Address Management
 * @group-content ../../ApexDocContent/Addresses.htm
 * @description trigger handler on Address object to support propagating addresses 
+* @async_support this trigger handler has been tested with async=true, and appears to not cause problems.
 */
 public class ADDR_Addresses_TDTM extends TDTM_Runnable {
 
@@ -310,7 +311,7 @@ public class ADDR_Addresses_TDTM extends TDTM_Runnable {
             listAccUpdate.add(acc);
             
 	        // check other addresses on this household that are no longer the default
-	        if (mapAccIdListAddrHH != null && mapAccIdListAddrHH.size() > 0) {
+            if (mapAccIdListAddrHH != null && mapAccIdListAddrHH.size() > 0 && mapAccIdListAddrHH.get(accId) != null) {
 	            for (Address__c addrHH : mapAccIdListAddrHH.get(accId)) {
 	                if (addrHH.Id == addrDefault.Id)
 	                    continue;
