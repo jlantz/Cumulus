@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2015 Salesforce.com Foundation
+    Copyright (c) 2015 Salesforce.org
     All rights reserved.
     
     Redistribution and use in source and binary forms, with or without
@@ -10,7 +10,7 @@
     * Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
-    * Neither the name of the Salesforce.com Foundation nor the names of
+    * Neither the name of Salesforce.org nor the names of
       its contributors may be used to endorse or promote products derived
       from this software without specific prior written permission.
  
@@ -28,7 +28,7 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 /**
-* @author Salesforce.com Foundation
+* @author Salesforce.org
 * @date 2015
 * @group API
 * @group-content ../../ApexDocContent/API.htm
@@ -44,10 +44,14 @@ global with sharing class BDI_DataImport_API {
     * @return ID The ID of the batch job that performs the data import.
     */
     global static ID importData() {
-    	Data_Import_Settings__c diSettings = UTIL_CustomSettingsFacade.getDataImportSettings();
-    	Boolean batchRunning = false;
-    	Id apexJobId;
-    	try {
+        Data_Import_Settings__c diSettings = UTIL_CustomSettingsFacade.getDataImportSettings();
+        Boolean batchRunning = false;
+        Id apexJobId;
+        try {
+            // ensure we are in the household account model!
+            if (!CAO_Constants.isHHAccountModel())
+                throw(new BDIException(Label.bdiHouseholdModelRequired));
+            
             // validate settings
             if (diSettings.Contact_Custom_Unique_ID__c != null) {
                 // make sure c1 and c2 have the appropriately named field
@@ -70,6 +74,7 @@ global with sharing class BDI_DataImport_API {
                             'Account2_' + diSettings.Account_Custom_Unique_ID__c})));
                 }
             }
+            
             
             // save any settings changes.
             try {

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2014, Salesforce.com Foundation
+    Copyright (c) 2014, Salesforce.org
     All rights reserved.
     
     Redistribution and use in source and binary forms, with or without
@@ -10,7 +10,7 @@
     * Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
-    * Neither the name of the Salesforce.com Foundation nor the names of
+    * Neither the name of Salesforce.org nor the names of
       its contributors may be used to endorse or promote products derived
       from this software without specific prior written permission.
 
@@ -28,7 +28,7 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 /**
-* @author Salesforce.com Foundation
+* @author Salesforce.org
 * @date 2014
 * @group Settings
 * @description Install Script for the NPSP package. 
@@ -163,11 +163,21 @@ global without sharing class STG_InstallScript implements InstallHandler {
         List<Trigger_Handler__c> handlersToInsert = new List<Trigger_Handler__c>();
         List<Trigger_Handler__c> handlersToUpdate = new List<Trigger_Handler__c>();
         List<Trigger_Handler__c> handlersToDelete = new List<Trigger_Handler__c>();
+
+        //First, find handlers to add them for deletion and remove them from the list
+        Integer i = 0;
+        while(i < existingHandlers.size()) {
+            if (TDTM_DefaultConfig.deletedClasses.contains(existingHandlers[i].Class__c)) {
+                handlersToDelete.add(existingHandlers[i]);
+                existingHandlers.remove(i);
+            } else {
+                i++;
+            }
+        }
         
         //Insert those that are in the list of default handlers but aren't in the database
         for(Trigger_Handler__c defaultHandler : defaultHandlers) {
             Boolean alreadyExists = false;
-            Boolean needsUpdate = false;
             for(Trigger_Handler__c existingHandler : existingHandlers) {
                 if(defaultHandler.Class__c == existingHandler.Class__c && defaultHandler.Object__c == existingHandler.Object__c) {
                     alreadyExists = true;
@@ -180,16 +190,14 @@ global without sharing class STG_InstallScript implements InstallHandler {
                         handlersToUpdate.add(existingHandler);
                     }
                     break;
-                } else if (TDTM_DefaultConfig.deletedClasses.contains(existingHandler.Class__c)) {
-                    handlersToDelete.add(existingHandler);
-                }
+                } 
             }
             if(!alreadyExists)
                 handlersToInsert.add(defaultHandler); 
         }    
         if(handlersToInsert.size() > 0) insert handlersToInsert;
         if(handlersToUpdate.size() > 0) update handlersToUpdate;
-        if(handlersToDelete.size() > 0) delete handlersToUpdate;
+        if(handlersToDelete.size() > 0) delete handlersToDelete;
     }
     
     private static void deactivateMatchingTdtm(Map<String, String> npspToCumulusMap, Map<String, Boolean> existingTriggerConfig) {
@@ -223,14 +231,14 @@ global without sharing class STG_InstallScript implements InstallHandler {
             userEmail = UTIL_Namespace.sandboxEmailToRealEmail(userEmail);
             Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
             mail.setUseSignature(false);
-            mail.setReplyTo('donotreply@salesforcefoundation.org');
+            mail.setReplyTo('donotreply@salesforce.org');
             mail.setSenderDisplayName('Nonprofit Starter Pack');
             mail.setSubject('NPSP Install Errors');
             String bodyString = Label.stgInstallScriptError;
             bodyString += '\n\n==========================. \n\n Error message: \n' + e.getMessage() + '\n\n'
             + 'Error stack trace: \n' + e.getStackTraceString();
             mail.setPlainTextBody(bodyString);      
-            mail.setToAddresses(new String[]{'errors@salesforcefoundation.org', userEmail});
+            mail.setToAddresses(new String[]{'errors@salesforce.org', userEmail});
             Messaging.sendEmail(new Messaging.SingleEmailMessage[]{mail});
         } catch(Exception e2) {
             //Nothing to do here, as we don't want the install script to fail because emails could not be sent.

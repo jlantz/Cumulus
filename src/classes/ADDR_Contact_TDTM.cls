@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2014, Salesforce.com Foundation
+    Copyright (c) 2014, Salesforce.org
     All rights reserved.
     
     Redistribution and use in source and binary forms, with or without
@@ -10,7 +10,7 @@
     * Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
-    * Neither the name of the Salesforce.com Foundation nor the names of
+    * Neither the name of Salesforce.org nor the names of
       its contributors may be used to endorse or promote products derived
       from this software without specific prior written permission.
  
@@ -28,7 +28,7 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 /**
-* @author Salesforce.com Foundation
+* @author Salesforce.org
 * @date 2014
 * @group Address Management
 * @description Trigger Handler on Contact for Address management 
@@ -130,7 +130,7 @@ public class ADDR_Contact_TDTM extends TDTM_Runnable {
             	// *,*,*,D     if no override, refill from Default Address, else update/new address object    
             	//
             	// simplifying this to some precedence rules:
-            	//     - if Account changes && no override, refill from Default Address
+            	//     - if Account changes && no override && no MailingAddress field changes, refill from Default Address
             	//     - if CurrentAddress changes to a new non-null value, refill to it.
             	//     - if MailingAddress field changes, update/new address object
                 //     - if isAddressOverride changes to false, refill from Default Address
@@ -140,7 +140,7 @@ public class ADDR_Contact_TDTM extends TDTM_Runnable {
             	// new highest priority! if Account changes... 
                 if (conOld != null && con.AccountId != conOld.AccountId) {
                     // if no override, refill from the Default Address
-            	    if (!con.is_Address_Override__c) {
+            	    if (!con.is_Address_Override__c && !isContactAddressChanged(con, conOld)) {
                         listConAddrReset.add(con);
             	    } else { // create a new address on the account
                         listConCreateAddr.add(con);                    

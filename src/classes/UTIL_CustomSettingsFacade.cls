@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2014, Salesforce.com Foundation
+    Copyright (c) 2014, Salesforce.org
     All rights reserved.
     
     Redistribution and use in source and binary forms, with or without
@@ -10,7 +10,7 @@
     * Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
-    * Neither the name of the Salesforce.com Foundation nor the names of
+    * Neither the name of Salesforce.org nor the names of
       its contributors may be used to endorse or promote products derived
       from this software without specific prior written permission.
 
@@ -28,14 +28,14 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 /**
-* @author Salesforce.com Foundation
+* @author Salesforce.org
 * @date 2014
 * @group Utilities
 * @description Helper class that retrieves custom settings and sets defaults.
 * Needs to be "without sharing" so that the Install Script can run it.
 */
 public without sharing class UTIL_CustomSettingsFacade {
-
+    
     //storing user-level custom settings in-memory to avoid trying to isert/update them 
     //twice and thus trigger the "duplicate OwnerId" error
     static npe01__Contacts_And_Orgs_Settings__c contactsSettings;
@@ -449,8 +449,9 @@ public without sharing class UTIL_CustomSettingsFacade {
             orgDataImportSettings = Data_Import_Settings__c.getOrgDefaults();
             if (orgDataImportSettings.Id == null) {
                 configDataImportSettings(orgDataImportSettings);
-                if(!Test.isRunningTest())
+                if(!Test.isRunningTest()) {
                     upsert orgDataImportSettings;
+                }
             }
         }
         return orgDataImportSettings;
@@ -465,6 +466,8 @@ public without sharing class UTIL_CustomSettingsFacade {
         cs.npe01__Payments_Enabled__c  = true;
         cs.npe01__Opportunity_Contact_Role_Default_role__c = 'Donor';
         cs.npe01__Account_Processor__c = CAO_Constants.HH_ACCOUNT_PROCESSOR;
+        cs.Opp_RecTypes_Excluded_for_Payments__c = null;
+        cs.Opp_Types_Excluded_for_Payments__c = null;
         Recordtypeinfo householdAccount = Schema.SObjectType.Account.getRecordTypeInfosByName().get(CAO_Constants.HH_ACCOUNT_PROCESSOR);
         if(householdAccount != null)
             cs.npe01__HH_Account_RecordTypeID__c = householdAccount.getRecordTypeId();
@@ -610,9 +613,17 @@ public without sharing class UTIL_CustomSettingsFacade {
         contactsSettings.npe01__Opportunity_Contact_Role_Default_role__c = mySettings.npe01__Opportunity_Contact_Role_Default_role__c;
         contactsSettings.npe01__Disable_Account_Model_Trigger__c = mySettings.npe01__Disable_Account_Model_Trigger__c;
         contactsSettings.npe01__Payments_Enabled__c = mySettings.npe01__Payments_Enabled__c;
+        contactsSettings.Opp_RecTypes_Excluded_for_Payments__c = mySettings.Opp_RecTypes_Excluded_for_Payments__c;
+        contactsSettings.Opp_Types_Excluded_for_Payments__c = mySettings.Opp_Types_Excluded_for_Payments__c;
+        contactsSettings.Automatic_Campaign_Member_Management__c = mySettings.Automatic_Campaign_Member_Management__c;
+        contactsSettings.Campaign_Member_Responded_Status__c = mySettings.Campaign_Member_Responded_Status__c;
+        contactsSettings.Campaign_Member_Non_Responded_Status__c = mySettings.Campaign_Member_Non_Responded_Status__c;
         contactsSettings.Organizational_Account_Addresses_Enabled__c = mySettings.Organizational_Account_Addresses_Enabled__c;
         contactsSettings.Simple_Address_Change_Treated_as_Update__c = mySettings.Simple_Address_Change_Treated_as_Update__c;
         contactsSettings.Household_Account_Addresses_Disabled__c = mySettings.Household_Account_Addresses_Disabled__c;
+        contactsSettings.Payments_Auto_Close_Stage_Name__c = mySettings.Payments_Auto_Close_Stage_Name__c;
+        contactsSettings.Honoree_Opportunity_Contact_Role__c = mySettings.Honoree_Opportunity_Contact_Role__c;
+        contactsSettings.Notification_Recipient_Opp_Contact_Role__c = mySettings.Notification_Recipient_Opp_Contact_Role__c;
         orgContactsSettings = contactsSettings;
         return contactsSettings;
     }

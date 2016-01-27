@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2013, Salesforce.com Foundation
+    Copyright (c) 2013, Salesforce.org
     All rights reserved.
     
     Redistribution and use in source and binary forms, with or without
@@ -10,7 +10,7 @@
     * Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
-    * Neither the name of the Salesforce.com Foundation nor the names of
+    * Neither the name of Salesforce.org nor the names of
       its contributors may be used to endorse or promote products derived
       from this software without specific prior written permission.
 
@@ -29,14 +29,14 @@
 */
 
 /**
-* @author Salesforce.com Foundation
+* @author Salesforce.org
 * @date 2014
 * @group TDTM
 * @group-content ../../ApexDocContent/TDTM.htm
 * @description Class called from each of the triggers (only one per object) that follow the TDTM design. It's in 
 * charge of figuring out which of the classes that do the actual work need to be called, and calling them.
 */
-public with sharing class TDTM_TriggerHandler {
+public class TDTM_TriggerHandler {
     
     private static Boolean defaultRecordsInserted = false;
     
@@ -136,7 +136,7 @@ public with sharing class TDTM_TriggerHandler {
             // changes system behavior.
             if (Test.isRunningTest() && !suppressDebugAssertAfterErrorLogging) {
                 UTIL_Debug.debug('****Stack trace: ' + e.getStackTraceString());
-                system.assertEquals(null, e.getMessage()); 
+                system.assertEquals(null, e.getMessage(), e.getStackTraceString()); 
             }
         }
     }

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2014, Salesforce.com Foundation
+    Copyright (c) 2014, Salesforce.org
     All rights reserved.
     
     Redistribution and use in source and binary forms, with or without
@@ -10,7 +10,7 @@
     * Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
-    * Neither the name of the Salesforce.com Foundation nor the names of
+    * Neither the name of Salesforce.org nor the names of
       its contributors may be used to endorse or promote products derived
       from this software without specific prior written permission.
 
@@ -28,7 +28,7 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 /**
-* @author Salesforce.com Foundation
+* @author Salesforce.org
 * @date 2014
 * @group Settings
 * @description Test Class for the Install Script for the NPSP package. 
@@ -60,6 +60,25 @@ public with sharing class STG_InstallScript_TEST {
         //Create some of the default settings
         createSomeDefaultSettings();
         
+        //Run the install script               
+        Test.testInstall(new STG_InstallScript(), null);
+        
+        //Verify all settings created
+        verifyAllSettingsCreated();
+    }
+
+    /** Tests that deleted class trigger handlers get deleted **/
+    public static testmethod void deletedHandlers() {
+        if (strTestOnly != '*' && strTestOnly != 'deletedHandlers') return;
+        
+        //Create some of the default settings
+        createSomeDefaultSettings();
+
+        // HH Object contact trigger support
+        insert new Trigger_Handler__c(Active__c = true, Asynchronous__c = false, 
+              Class__c = 'OPP_OpportunityNaming_TDTM', Load_Order__c = 0, Object__c = 'Opportunity', 
+              Trigger_Action__c = 'AfterInsert;AfterUpdate;AfterDelete');        
+
         //Run the install script               
         Test.testInstall(new STG_InstallScript(), null);
         
@@ -115,7 +134,7 @@ public with sharing class STG_InstallScript_TEST {
         afterScriptConfig.sort();
         defaultConfig.sort();
         
-        System.assertEquals(afterScriptConfig.size(), defaultConfig.size());
+        System.assertEquals(defaultConfig.size(), afterScriptConfig.size(), 'Number of created trigger handlers should match the number of handlers in TDTM_DefaultConfig.');
         for(Integer i = 0; i < defaultConfig.size(); i++) {
             System.assertEquals(afterScriptConfig[i].Class__c, defaultConfig[i].Class__c);
             System.assertEquals(afterScriptConfig[i].Load_Order__c, defaultConfig[i].Load_Order__c);

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2011, Salesforce.com Foundation
+    Copyright (c) 2011, Salesforce.org
     All rights reserved.
     
     Redistribution and use in source and binary forms, with or without
@@ -10,7 +10,7 @@
     * Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
-    * Neither the name of the Salesforce.com Foundation nor the names of
+    * Neither the name of Salesforce.org nor the names of
       its contributors may be used to endorse or promote products derived
       from this software without specific prior written permission.
  
@@ -28,7 +28,7 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 /**
-* @author Salesforce.com Foundation
+* @author Salesforce.org
 * @date 2011 (1.x)
 * @group Households
 * @description This class contains unit tests for validating the behavior of the Household Opportunity Contact Role class
@@ -56,6 +56,7 @@ private class HH_OppContactRoles_TEST {
     }
     /*********************************************************************************************************
     * @description Tests that household Opportunity Contact Roles are created under the different account models.
+    * Verifies deceased contacts are not included.
     * @param strProcessor Which account model processor to test under.
     * @return void
     */
@@ -97,6 +98,18 @@ private class HH_OppContactRoles_TEST {
             npo02__Household__c = householdId
         );
         insert con2;
+        Contact con3 = new Contact(
+            FirstName=CAO_Constants.CONTACT_FIRSTNAME_FOR_TESTS,
+            LastName=CAO_Constants.CONTACT_LASTNAME_FOR_TESTS,
+            npe01__WorkEmail__c = CAO_Constants.CONTACT_EMAIL_FOR_TESTS, 
+            npe01__Preferred_Email__c = CAO_Constants.CONTACT_PREFERRED_EMAIL_FOR_TESTS,
+            npe01__WorkPhone__c = CAO_Constants.CONTACT_PHONE_FOR_TESTS,
+            npe01__PreferredPhone__c = CAO_Constants.CONTACT_PREFERRED_PHONE_FOR_TESTS,
+            Deceased__c = true,
+            AccountId = (strProcessor == CAO_Constants.HH_ACCOUNT_PROCESSOR ? accountId : null),
+            npo02__Household__c = householdId
+        );
+        insert con3;
         //create opportunity
         Opportunity o = new Opportunity(
             Name='test oppty',

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2014 Salesforce.com Foundation
+    Copyright (c) 2014 Salesforce.org
     All rights reserved.
     
     Redistribution and use in source and binary forms, with or without
@@ -10,7 +10,7 @@
     * Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
-    * Neither the name of the Salesforce.com Foundation nor the names of
+    * Neither the name of Salesforce.org nor the names of
       its contributors may be used to endorse or promote products derived
       from this software without specific prior written permission.
  
@@ -28,12 +28,12 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 /**
-* @author Salesforce.com Foundation 
+* @author Salesforce.org 
 * @date 2014
 * @group Settings
 * @description Controller for the Health Check wizard
 */
-public with sharing class STG_PanelHealthCheck_CTRL extends STG_Panel {
+public without sharing class STG_PanelHealthCheck_CTRL extends STG_Panel {
 
     /*********************************************************************************************************
     * @description The panel's constructor 
@@ -176,10 +176,12 @@ public with sharing class STG_PanelHealthCheck_CTRL extends STG_Panel {
         STG_PanelRelAuto_CTRL.verifyAutoCreateRels(this);
         STG_PanelRelReciprocal_CTRL.verifyRelLookups(this);
         STG_PanelOppRollups_CTRL.verifyFiscalYearRollups(this);
+        STG_PanelOpps_CTRL.verifyOpportunityStageForPaymentAutoCloseIsActiveClosedWon(this);
         verifyScheduledJobs();
         ERR_Notifier.verifyErrorSettings(this);
         verifyOppContactRoles();
         verifyTriggerHandlers();
+        verifyNoMissingOppPayments();
         
         DateTime dtEnd = system.now();
         double msec = dtEnd.getTime() - dtStart.getTime();
@@ -239,7 +241,8 @@ public with sharing class STG_PanelHealthCheck_CTRL extends STG_Panel {
 	        strInfo += '<BR/>' + CAO_Constants.ONE_TO_ONE_ORGANIZATION_TYPE + ': ' + cOne2One + (cOne2One == 9999 ? '+' : '');
 	        strInfo += '<BR/>' + CAO_Constants.HH_ACCOUNT_TYPE + ': ' + cHH + (cHH == 9999 ? '+' : '');        
 	        
-	        createDR(Label.healthLabelAccountModelData, isMixedAccs ? statusError : statusSuccess,  isMixedAccs ? strInfo : null, isMixedAccs ? null : strInfo);        
+	        createDR(Label.healthLabelAccountModelData, isMixedAccs ? statusError : statusSuccess,  isMixedAccs ? strInfo : null, 
+	           isMixedAccs ? label.healthSolutionAccountModel : strInfo);        
     	} catch (exception ex) {
             createDR(Label.healthLabelAccountModelData, statusError,  ex.getMessage(), null);            		
     	}    
@@ -291,7 +294,8 @@ public with sharing class STG_PanelHealthCheck_CTRL extends STG_Panel {
     	try {
 	        integer cContact = [select Count() from Contact where AccountId = null limit 9999];   
 	        if (cContact > 0) {
-	            createDR(Label.healthLabelContactData, statusError, string.format(Label.healthDetailsContactData, new string[]{string.valueOf(cContact)}), null);                	
+	            createDR(Label.healthLabelContactData, statusError, 
+	               string.format(Label.healthDetailsContactData, new string[]{string.valueOf(cContact)}), label.healthSolutionContactData);                	
 	        } else {
 	            createDR(Label.healthLabelContactData, statusSuccess, null, null); 
 	        }  
@@ -526,13 +530,17 @@ public with sharing class STG_PanelHealthCheck_CTRL extends STG_Panel {
 	        for (Schedulable__c schedClass : schedClasses) {
 	            Type classType = Type.forName(schedClass.Class_Name__c);
 	            if (classType != null) {
-	                Object instance = classType.newInstance();
-	                if (instance != null) {
-	                    if (instance instanceof UTIL_MasterSchedulableHelper.UTIL_IRecurring) {
-	                        // this entry is good!
-	                        continue;
-	                    }
-	                }
+	                try {
+		                Object instance = classType.newInstance();
+		                if (instance != null) {
+		                    if (instance instanceof UTIL_MasterSchedulableHelper.UTIL_IRecurring) {
+		                        // this entry is good!
+		                        continue;
+		                    }
+		                }
+	                } catch (exception ex) {
+		                // fall thru to log error
+		            }
 	            }
 	            isValidAll = false;
 	            createDR(Label.healthLabelScheduler, statusError, 
@@ -586,6 +594,7 @@ public with sharing class STG_PanelHealthCheck_CTRL extends STG_Panel {
             
             for (Trigger_Handler__c defaultHandler : listHandlersDefault) {
                 Boolean alreadyExists = false;
+                integer cExactMatch = 0;
                 for (Trigger_Handler__c existingHandler : listHandlersCurrent) {
                     if (defaultHandler.Class__c == existingHandler.Class__c && defaultHandler.Object__c == existingHandler.Object__c) {
                         alreadyExists = true;
@@ -599,13 +608,18 @@ public with sharing class STG_PanelHealthCheck_CTRL extends STG_Panel {
                             strInfo += '<li>';
                             strInfo += string.format(label.healthDetailsTriggerHandlerMismatch, new string[]{defaultHandler.Class__c, defaultHandler.Object__c});
                             strInfo += '</li>';
+                        } else {
+                            cExactMatch++;
                         }
-                        break;
                     }
                 }
                 if (!alreadyExists) {
                     strInfo += '<li>';
                     strInfo += string.format(label.healthDetailsTriggerHandlerMissing, new string[]{defaultHandler.Class__c, defaultHandler.Object__c});
+                    strInfo += '</li>';
+                } else if (cExactMatch > 1) {
+                    strInfo += '<li>';
+                    strInfo += string.format(label.healthDetailsTriggerHandlerDuplicate, new string[]{defaultHandler.Class__c, defaultHandler.Object__c});
                     strInfo += '</li>';
                 }
             }    
@@ -619,4 +633,35 @@ public with sharing class STG_PanelHealthCheck_CTRL extends STG_Panel {
             createDR(Label.healthLabelTriggerHandlerCheck, statusError, ex.getMessage(), null);                   
         }    
     }
+    
+    /*********************************************************************************************************
+    * @description Verifies that there are no Opportunities that 
+    */
+    public void verifyNoMissingOppPayments() {
+        if (!UTIL_CustomSettingsFacade.getContactsSettings().npe01__Payments_Enabled__c)
+            return;
+        try {
+            set<string> setOppTypeNoPayment = PMT_PaymentCreator.setOppTypeNoPayment;
+            set<id> setOppRecordTypeIdNoPayment = PMT_PaymentCreator.setOppRecordTypeIdNoPayment;
+            string soql = 'select count() from Opportunity where npe01__Number_of_Payments__c = 0 and Amount > 0 ' +
+                ' and (isWon = true or isClosed = false) ' +
+                ' and npe01__Do_Not_Automatically_Create_Payment__c = false ' +
+                ' and  Type not in :setOppTypeNoPayment ';
+
+            SObjectField OppRecordTypeId = Schema.sObjectType.Opportunity.fields.getMap().get('RecordTypeId');
+            if (OppRecordTypeId != null)
+                soql += ' and RecordTypeId not in :setOppRecordTypeIdNoPayment ';
+                     
+            integer cMissing = database.countQuery(soql);
+            if (cMissing > 0) {
+                createDR(Label.healthLabelOppPayments, statusWarning, string.format(Label.healthDetailsMissingOppPayments, new string[]{string.valueOf(cMissing)}), label.healthSolutionMissingOppPayments);
+            } else {
+                createDR(Label.healthLabelOppPayments, statusSuccess, null, label.healthLabelNoMissingOppPayments);
+            }            
+        } catch (exception ex) {
+            createDR(Label.healthLabelOppPayments, statusError, ex.getMessage(), null);                   
+        }    
+        
+    }
+    
 }

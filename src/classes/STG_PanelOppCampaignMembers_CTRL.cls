@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2015, Salesforce.com Foundation
+    Copyright (c) 2015, Salesforce.org
     All rights reserved.
     
     Redistribution and use in source and binary forms, with or without
@@ -10,7 +10,7 @@
     * Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
-    * Neither the name of the Salesforce.com Foundation nor the names of
+    * Neither the name of Salesforce.org nor the names of
       its contributors may be used to endorse or promote products derived
       from this software without specific prior written permission.
  
@@ -28,25 +28,15 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 /**
-* @author Salesforce.com Foundation
+* @author Salesforce.org
 * @date 2015
-* @group Opportunity
-* @group-content ../../ApexDocContent/Opportunity.htm
-* @description TDTM Trigger Handler for Opportunity Naming.
+* @group Settings
+* @description Controller for the Opp Campaign Members panel.
 */
-public class OPP_OpportunityNaming_TDTM extends TDTM_Runnable {
-
-    /*******************************************************************************************************
-    * @description Trigger Handler on Opportunity after insert, runs through naming.
-    * @param listNew the list of contacts, accounts, or affiliations from trigger new. 
-    * @param listOld the list of contacts, accounts, or affiliations from trigger old. 
-    * @param triggerAction Which action triggered the current context. (Before or After; Insert, Update, 
-    * Delete, or Undelete.) After Insert is expected in this case.
-    * @param objResult The field describe object for the current trigger context. 
-    * @return dmlWrapper Objects that need to be inserted or updated after the processing of the trigger.
-    ********************************************************************************************************/
-    public override DmlWrapper run(List<SObject> newlist, List<SObject> oldlist, 
-        TDTM_Runnable.Action triggerAction, Schema.DescribeSObjectResult objResult) {        
-        return null;
-    }
+public with sharing class STG_PanelOppCampaignMembers_CTRL extends STG_Panel {
+        
+    /*********************************************************************************************************
+    * @description Returns the string Id of the Opp Campaign Members panel. 
+    */
+    public override string idPanel() { return 'idPanelOppCampaignMembers'; }
 }
