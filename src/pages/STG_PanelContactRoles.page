@@ -55,7 +55,7 @@
             </section>
             <section>
                 <h3 class="section-header">{!$Label.stgLabelHHOCR}</h3>            
-                <p class="section-help">{!$Label.npo02__Household_Contact_Roles_Help_Text}</p>
+                <p class="section-help">{!$Label.101o0000001oHXv}</p>
                 <div class="form-group">
                     <apex:outputLabel value="{!$ObjectType.npo02__Households_Settings__c.Fields.npo02__Household_Contact_Roles_On__c.Label}" for="cbxHCRO" styleClass="col-sm-4 control-label" />
                     <div class="col-sm-8 form-control-column">
